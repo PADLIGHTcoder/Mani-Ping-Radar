@@ -42,3 +42,7 @@
   * https://padlightcoder.github.io/Mani-Ping-Radar/
 
 * **روش لوکال:** دانلود فایل `index.html` و اجرای مستقیم آن روی مرورگر دسکتاپ یا موبایل.
+
+
+***راه ارتباطی***
+t.me/Eroor919
