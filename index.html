@@ -260,9 +260,9 @@
 <body>
 
 <div class="container">
-    <!-- نوار هوشمند نصب برنامه (آفلاین شدن) -->
+    <!-- نوار هوشمند نصب برنامه -->
     <div id="install-bar">
-        <p id="installText">📱 برای استفاده آفلاین (ابران) ضربه بزنید و ابزار را نصب کنید</p>
+        <p id="installText">📱 ابزار مانی را نصب کنید تا بدون نیاز به فیلترشکن و کاملاً آفلاین اجرا شود!</p>
         <button id="btn-install">👇 نصب مستقیم ابزار</button>
     </div>
 
@@ -314,12 +314,12 @@
     let currentLang = 'fa';
     let deferredPrompt;
 
-    // ثبت سرویس ورکر برای پشتیبانی نصب PWA
+    // سرویس ورکر PWA
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker Registered!'))
-                .catch(err => console.log('Service Worker Failed!', err));
+                .then(reg => console.log('SW Registered'))
+                .catch(err => console.log('SW Failed', err));
         });
     }
 
@@ -332,7 +332,7 @@
     document.getElementById('btn-install').addEventListener('click', async () => {
         if (deferredPrompt) {
             deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
+            await deferredPrompt.userChoice;
             deferredPrompt = null;
             document.getElementById('install-bar').style.display = 'none';
         }
@@ -362,7 +362,7 @@
             alertEmpty: "لطفاً ابتدا لیست آی‌پی‌ها را وارد کنید.",
             failedPing: "ناموفق",
             langBtn: "English",
-            installBanner: "📱 برای استفاده آفلاین (ابران) ضربه بزنید و ابزار را نصب کنید ",
+            installBanner: "📱 ابزار مانی را نصب کنید تا بدون نیاز به فیلترشکن و کاملاً آفلاین اجرا شود!",
             installBtn: "👇 نصب مستقیم ابزار"
         },
         en: {
@@ -391,7 +391,6 @@
 
     function toggleLanguage() {
         currentLang = currentLang === 'fa' ? 'en' : 'fa';
-        
         const htmlTag = document.documentElement;
         htmlTag.lang = currentLang;
         htmlTag.dir = currentLang === 'fa' ? 'rtl' : 'ltr';
@@ -401,9 +400,7 @@
         document.getElementById('btn-install').innerText = locales[currentLang].installBtn;
         document.getElementById('ipInput').placeholder = locales[currentLang].placeholder;
         document.getElementById('startBtn').innerText = locales[currentLang].startBtn;
-        
-        const copyAllBtn = document.getElementById('copyAllBtn');
-        copyAllBtn.innerText = locales[currentLang].copyAllBtn;
+        document.getElementById('copyAllBtn').innerText = locales[currentLang].copyAllBtn;
 
         document.getElementById('thRank').innerText = locales[currentLang].rank;
         document.getElementById('thIp').innerText = locales[currentLang].ip;
@@ -417,64 +414,53 @@
             progressText.innerText = locales[currentLang].scanFinished;
         }
 
-        if(globalResults.length > 0) {
-            renderResults(globalResults);
-        } else {
-            document.getElementById('emptyRow').innerText = locales[currentLang].emptyList;
-        }
+        if(globalResults.length > 0) renderResults(globalResults);
+        else document.getElementById('emptyRow').innerText = locales[currentLang].emptyList;
     }
 
     function fallbackCopyText(text) {
         const textArea = document.createElement("textarea");
         textArea.value = text;
         textArea.style.position = "fixed"; 
-        textArea.style.top = "0";
-        textArea.style.left = "0";
-        textArea.style.width = "2em";
-        textArea.style.height = "2em";
-        textArea.style.padding = "0";
-        textArea.style.border = "none";
-        textArea.style.outline = "none";
-        textArea.style.boxShadow = "none";
-        textArea.style.background = "transparent";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        try { document.execCommand('copy'); } catch (err) { console.error(err); }
+        textArea.style.top = "0"; textArea.style.left = "0";
+        textArea.style.width = "2em"; textArea.style.height = "2em";
+        textArea.style.padding = "0"; document.body.appendChild(textArea);
+        textArea.focus(); textArea.select();
+        try { document.execCommand('copy'); } catch (err) {}
         document.body.removeChild(textArea);
     }
 
-    async function pingIP(ip) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2500); 
-        
-        // سیستم تشخیص هوشمند پروتکل برای برطرف کردن Mixed Content گیت‌هاب پیجز
-        const protocol = window.location.protocol === 'https:' ? 'https://' : 'http://';
-        const startTime = performance.now();
-        try {
-            await fetch(`${protocol}${ip}/cdn-cgi/trace`, { 
-                mode: 'no-cors', 
-                signal: controller.signal,
-                cache: 'no-cache',
-                credentials: 'omit'
-            });
-            const duration = Math.round(performance.now() - startTime);
-            clearTimeout(timeoutId);
-            return duration;
-        } catch (error) {
-            clearTimeout(timeoutId);
-            // لایه دوم تست در صورت لود لوکال یا کدهای معمولی HTTP
-            if(window.location.protocol !== 'https:') {
-                try {
-                    const subController = new AbortController();
-                    setTimeout(() => subController.abort(), 1500);
-                    const subStart = performance.now();
-                    await fetch(`http://${ip}`, { mode: 'no-cors', signal: subController.signal, cache: 'no-cache' });
-                    return Math.round(performance.now() - subStart);
-                } catch(e) { return Infinity; }
-            }
-            return Infinity;
-        }
+    // 💡 بازنویسی هوشمند سیستم پینگ با استفاده از ترفند لود تصویر (رفع همیشگی مشکل Mixed Content در حالت نصب‌شده)
+    function pingIP(ip) {
+        return new Promise((resolve) => {
+            const start = performance.now();
+            const img = new Image();
+            
+            // تعیین تایم‌اوت ۲.۵ ثانیه‌ای
+            const timer = setTimeout(() => {
+                img.src = ""; // متوقف کردن لود
+                resolve(Infinity);
+            }, 2500);
+
+            img.onload = () => {
+                clearTimeout(timer);
+                resolve(Math.round(performance.now() - start));
+            };
+
+            img.onerror = () => {
+                clearTimeout(timer);
+                const duration = Math.round(performance.now() - start);
+                // در پینگ تصویری، حتی بلاک شدن یا ارور ۴۰۴ هم یعنی سرور زنده است و دیتا را برگردانده!
+                if (duration < 2500) {
+                    resolve(duration);
+                } else {
+                    resolve(Infinity);
+                }
+            };
+
+            // ارسال درخواست به نقطه فیدبک کلودفلر با دور زدن محدودیت‌های HTTPS امن مرورگر
+            img.src = `http://${ip}/cdn-cgi/trace?v=${start}`;
+        });
     }
 
     function copyToClipboard(text, btnElement) {
@@ -529,13 +515,12 @@
             
             const batchPromises = batch.map(async (ip) => {
                 const ping = await pingIP(ip);
-                if (ping !== Infinity && ping > 10) {
+                if (ping !== Infinity && ping > 5) {
                     globalResults.push({ ip, ping });
                 } else {
                     globalResults.push({ ip, ping: 'FAILED_MARKER' });
                 }
                 completedCount++;
-                
                 const percent = Math.round((completedCount / ips.length) * 100);
                 pBar.style.width = `${percent}%`;
             });
@@ -591,6 +576,5 @@
         });
     }
 </script>
-
 </body>
 </html>
