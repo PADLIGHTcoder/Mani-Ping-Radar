@@ -104,6 +104,34 @@
             outline: none;
         }
 
+        .config-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .config-row label {
+            font-size: 13px;
+            color: #cbd5e1;
+        }
+
+        .limit-input {
+            width: 70px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: #fff;
+            padding: 6px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 14px;
+            outline: none;
+        }
+
         .btn-group {
             display: flex;
             gap: 10px;
@@ -152,9 +180,31 @@
         .status-bar {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             color: var(--text-muted);
             font-size: 13px;
             margin-bottom: 12px;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            background: #1e293b;
+            border: 1px solid var(--border);
+            color: #94a3b8;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover {
+            background: #334155;
+            color: #fff;
+        }
+        .filter-btn.active {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--danger);
+            color: #f87171;
         }
 
         .table-wrapper {
@@ -176,6 +226,7 @@
         th { background-color: rgba(15, 23, 42, 0.6); color: #94a3b8; padding: 10px 8px; font-size: 12px; border-bottom: 1px solid var(--border); }
         td { padding: 12px 8px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
+        tr.hide-row { display: none !important; }
 
         .ping-badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 20px; font-weight: 700; font-size: 11px; white-space: nowrap; }
         .excellent { background: rgba(16, 185, 129, 0.15); color: var(--success); }
@@ -210,6 +261,15 @@
                 font-size: 12px !important;
                 word-break: break-all;
             }
+            .config-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .limit-input {
+                width: 100%;
+                box-sizing: border-box;
+            }
         }
     </style>
 </head>
@@ -226,6 +286,13 @@
 
     <div class="controls">
         <textarea id="ipInput" placeholder="آی‌پی‌های خود را کپی کرده و اینجا بفرستید (هر آی‌پی در یک خط)..."></textarea>
+        
+        <div class="config-row">
+            <label id="lblLimit" for="pingLimit">حداکثر پینگ مجاز برای کپی دسته‌جمعی:</label>
+            <input type="number" id="pingLimit" class="limit-input" value="200" min="10" max="2500" oninput="updateButtonText()">
+            <label>ms</label>
+        </div>
+
         <div class="btn-group">
             <button id="startBtn" class="action-btn" onclick="startScan()">شروع اسکن دقیق</button>
             <button id="copyAllBtn" class="action-btn btn-copy-all" onclick="copyGoodIPs()" disabled>کپی آی‌پی‌های زیر 200ms</button>
@@ -234,6 +301,7 @@
 
     <div class="status-bar">
         <span id="progressText">در انتظار شروع...</span>
+        <button id="filterBtn" class="filter-btn" onclick="toggleFailedRows()" style="display: none;">مخفی کردن ناموفق‌ها</button>
     </div>
 
     <div class="progress-container" id="pContainer">
@@ -262,12 +330,14 @@
 <script>
     let globalResults = [];
     let currentLang = 'fa';
+    let hideFailed = false;
 
     const locales = {
         fa: {
             placeholder: "آی‌پی‌های خود را کپی کرده و اینجا بفرستید (هر آی‌پی در یک خط)...",
             startBtn: "شروع اسکن دقیق",
-            copyAllBtn: "کپی آی‌پی‌های زیر 200ms",
+            copyAllBtn: "کپی آی‌پی‌های زیر ",
+            lblLimit: "حداکثر پینگ مجاز برای کپی دسته‌جمعی:",
             waitStatus: "در انتظار شروع...",
             emptyList: "لیست خالی است. آی‌پی‌ها را وارد کنید.",
             rank: "رتبه",
@@ -279,15 +349,18 @@
             copy: "کپی",
             copied: "کپی شد! ✓",
             copiedAll: "لیست آی‌پی‌های خوب کپی شد! ✓",
-            noGoodIp: "هیچ آی‌پی با پینگ زیر ۲۰۰ میلی‌ثانیه پیدا نشد.",
+            noGoodIp: "هیچ آی‌پی با پینگ مجاز پیدا نشد.",
             alertEmpty: "لطفاً ابتدا لیست آی‌پی‌ها را وارد کنید.",
             failedPing: "ناموفق",
-            langBtn: "English"
+            langBtn: "English",
+            filterHide: "مخفی کردن ناموفق‌ها",
+            filterShow: "نمایش همه آی‌پی‌ها"
         },
         en: {
             placeholder: "Paste your IPs here (One IP per line)...",
             startBtn: "Start Precision Scan",
-            copyAllBtn: "Copy IPs under 200ms",
+            copyAllBtn: "Copy IPs under ",
+            lblLimit: "Max allowed ping for batch copy:",
             waitStatus: "Waiting to start...",
             emptyList: "List is empty. Please enter IPs.",
             rank: "Rank",
@@ -299,12 +372,44 @@
             copy: "Copy",
             copied: "Copied! ✓",
             copiedAll: "Good IPs list copied! ✓",
-            noGoodIp: "No IPs found with ping under 200ms.",
+            noGoodIp: "No IPs found within the allowed ping.",
             alertEmpty: "Please enter IPs first.",
             failedPing: "Failed",
-            langBtn: "فارسی"
+            langBtn: "فارسی",
+            filterHide: "Hide Failed IPs",
+            filterShow: "Show All IPs"
         }
     };
+
+    function updateButtonText() {
+        const limit = document.getElementById('pingLimit').value || 200;
+        const copyAllBtn = document.getElementById('copyAllBtn');
+        copyAllBtn.innerText = locales[currentLang].copyAllBtn + limit + "ms";
+    }
+
+    function toggleFailedRows() {
+        hideFailed = !hideFailed;
+        const filterBtn = document.getElementById('filterBtn');
+        
+        if (hideFailed) {
+            filterBtn.classList.add('active');
+            filterBtn.innerText = locales[currentLang].filterShow;
+        } else {
+            filterBtn.classList.remove('active');
+            filterBtn.innerText = locales[currentLang].filterHide;
+        }
+        
+        const rows = document.querySelectorAll('#resultTable tr');
+        rows.forEach(row => {
+            if (row.getAttribute('data-status') === 'failed') {
+                if (hideFailed) {
+                    row.classList.add('hide-row');
+                } else {
+                    row.classList.remove('hide-row');
+                }
+            }
+        });
+    }
 
     function toggleLanguage() {
         currentLang = currentLang === 'fa' ? 'en' : 'fa';
@@ -316,9 +421,12 @@
         document.getElementById('langBtnText').innerText = locales[currentLang].langBtn;
         document.getElementById('ipInput').placeholder = locales[currentLang].placeholder;
         document.getElementById('startBtn').innerText = locales[currentLang].startBtn;
+        document.getElementById('lblLimit').innerText = locales[currentLang].lblLimit;
         
-        const copyAllBtn = document.getElementById('copyAllBtn');
-        copyAllBtn.innerText = locales[currentLang].copyAllBtn;
+        updateButtonText();
+
+        const filterBtn = document.getElementById('filterBtn');
+        filterBtn.innerText = hideFailed ? locales[currentLang].filterShow : locales[currentLang].filterHide;
 
         document.getElementById('thRank').innerText = locales[currentLang].rank;
         document.getElementById('thIp').innerText = locales[currentLang].ip;
@@ -396,8 +504,9 @@
     }
 
     function copyGoodIPs() {
+        const limit = parseInt(document.getElementById('pingLimit').value) || 200;
         const goodIPs = globalResults
-            .filter(item => typeof item.ping === 'number' && item.ping <= 200)
+            .filter(item => typeof item.ping === 'number' && item.ping <= limit)
             .map(item => item.ip)
             .join('\n');
 
@@ -409,7 +518,7 @@
         fallbackCopyText(goodIPs);
         const copyAllBtn = document.getElementById('copyAllBtn');
         copyAllBtn.innerText = locales[currentLang].copiedAll;
-        setTimeout(() => { copyAllBtn.innerText = locales[currentLang].copyAllBtn; }, 2000);
+        setTimeout(() => { updateButtonText(); }, 2000);
     }
 
     async function startScan() {
@@ -419,6 +528,7 @@
         const progressText = document.getElementById('progressText');
         const pContainer = document.getElementById('pContainer');
         const pBar = document.getElementById('pBar');
+        const filterBtn = document.getElementById('filterBtn');
         
         const ips = input.split('\n').map(ip => ip.trim()).filter(ip => ip.length > 0);
         
@@ -431,6 +541,7 @@
         copyAllBtn.disabled = true;
         pContainer.style.display = 'block';
         pBar.style.width = '0%';
+        filterBtn.style.display = 'none';
         
         globalResults = [];
         let completedCount = 0;
@@ -465,6 +576,12 @@
         progressText.innerText = locales[currentLang].scanFinished;
         startBtn.disabled = false;
         copyAllBtn.disabled = false;
+        
+        // نمایش دکمه فیلتر پس از پایان اسکن در صورتی که آی‌پی ناموفق وجود داشته باشد
+        const hasFailed = globalResults.some(item => item.ping === 'FAILED_MARKER');
+        if (hasFailed) {
+            filterBtn.style.display = 'inline-block';
+        }
     }
 
     function renderResults(results) {
@@ -482,15 +599,21 @@
         sortedResults.forEach((item, index) => {
             let badgeClass = 'bad';
             let pingDisplay = locales[currentLang].failedPing;
+            let rowStatus = 'success';
 
             if (item.ping !== 'FAILED_MARKER') {
                 pingDisplay = item.ping + ' ms';
                 if (item.ping < 150) badgeClass = 'excellent';
                 else if (item.ping < 500) badgeClass = 'good';
+            } else {
+                rowStatus = 'failed';
             }
 
+            // بررسی وضعیت فیلتر زنده برای ردیف‌های جدید
+            let hideClass = (rowStatus === 'failed' && hideFailed) ? 'hide-row' : '';
+
             const row = `
-                <tr>
+                <tr data-status="${rowStatus}" class="${hideClass}">
                     <td style="font-weight: bold; color: var(--text-muted);">${index + 1}</td>
                     <td class="ip-cell" style="font-family: monospace; font-size: 13px;">${item.ip}</td>
                     <td><span class="ping-badge ${badgeClass}">${pingDisplay}</span></td>
