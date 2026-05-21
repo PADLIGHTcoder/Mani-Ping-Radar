@@ -442,12 +442,13 @@
         document.body.removeChild(textArea);
     }
 
-    // بازنویسی موتور پینگ با استفاده از تکنیک بارگذاری تصویر برای رفع مشکل Mixed Content
+    // موتور اسکن بهبودیافته با قابلیت آنتی‌کَش (Anti-Cache) 100٪ تضمینی
     function pingIP(ip) {
         return new Promise((resolve) => {
             const start = performance.now();
             const img = new Image();
             
+            // تعیین تایم‌اوت ۲.۵ ثانیه‌ای برای آی‌پی‌های مرده
             const timer = setTimeout(() => {
                 img.src = ""; 
                 resolve(Infinity);
@@ -461,7 +462,6 @@
             img.onerror = () => {
                 clearTimeout(timer);
                 const duration = Math.round(performance.now() - start);
-                // در پینگ تصویری، پاسخ گرفتن (حتی با ارور سورس) یعنی سرور زنده است
                 if (duration < 2500) {
                     resolve(duration);
                 } else {
@@ -469,7 +469,9 @@
                 }
             };
 
-            img.src = `http://${ip}/cdn-cgi/trace?v=${start}`;
+            // استفاده از مهر زمانی میکروثانیه‌ای منحصر‌به‌فرد برای مجبور کردن مرورگر به اسکن واقعی شبکه
+            const antiCacheParam = Date.now() + Math.random().toString(36).substring(2);
+            img.src = `http://${ip}/cdn-cgi/trace?cachebreaker=${antiCacheParam}`;
         });
     }
 
