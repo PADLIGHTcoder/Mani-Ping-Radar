@@ -285,7 +285,7 @@
     <h1>Mani IP Scanner</h1>
 
     <div class="controls">
-        <textarea id="ipInput" placeholder="آی‌پی‌های خود را کپی کرده و اینجا بفرستید (هر آی‌پی در یک خط)..."></textarea>
+        <textarea id="ipInput" placeholder="آی‌پی‌های خود را کپی کرده و اینجا بفرستید (هر آی‌پی در یک خط یا پشت سر هم)..."></textarea>
         
         <div class="config-row">
             <label id="lblLimit" for="pingLimit">حداکثر پینگ مجاز برای کپی دسته‌جمعی:</label>
@@ -334,7 +334,7 @@
 
     const locales = {
         fa: {
-            placeholder: "آی‌پی‌های خود را کپی کرده و اینجا بفرستید (هر آی‌پی در یک خط)...",
+            placeholder: "آی‌پی‌های خود را کپی کرده و اینجا بفرستید (هر آی‌پی در یک خط یا پشت سر هم)...",
             startBtn: "شروع اسکن دقیق",
             copyAllBtn: "کپی آی‌پی‌های زیر ",
             lblLimit: "حداکثر پینگ مجاز برای کپی دسته‌جمعی:",
@@ -357,7 +357,7 @@
             filterShow: "نمایش همه آی‌پی‌ها"
         },
         en: {
-            placeholder: "Paste your IPs here (One IP per line)...",
+            placeholder: "Paste your IPs here (One IP per line or separated by spaces/chars)...",
             startBtn: "Start Precision Scan",
             copyAllBtn: "Copy IPs under ",
             lblLimit: "Max allowed ping for batch copy:",
@@ -530,7 +530,9 @@
         const pBar = document.getElementById('pBar');
         const filterBtn = document.getElementById('filterBtn');
         
-        const ips = input.split('\n').map(ip => ip.trim()).filter(ip => ip.length > 0);
+        // تغییر مهم: استخراج هوشمند آی‌پی‌ها از متن با ریجکس بدون وابستگی به خط جدید
+        const ipRegex = /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g;
+        const ips = input.match(ipRegex) || [];
         
         if(ips.length === 0) {
             alert(locales[currentLang].alertEmpty);
@@ -577,7 +579,6 @@
         startBtn.disabled = false;
         copyAllBtn.disabled = false;
         
-        // نمایش دکمه فیلتر پس از پایان اسکن در صورتی که آی‌پی ناموفق وجود داشته باشد
         const hasFailed = globalResults.some(item => item.ping === 'FAILED_MARKER');
         if (hasFailed) {
             filterBtn.style.display = 'inline-block';
@@ -609,7 +610,6 @@
                 rowStatus = 'failed';
             }
 
-            // بررسی وضعیت فیلتر زنده برای ردیف‌های جدید
             let hideClass = (rowStatus === 'failed' && hideFailed) ? 'hide-row' : '';
 
             const row = `
