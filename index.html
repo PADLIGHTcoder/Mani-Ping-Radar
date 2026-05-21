@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mani IP Scanner</title>
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563eb">
     
     <style>
@@ -40,6 +41,43 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             border: 1px solid var(--border);
             box-sizing: border-box;
+        }
+
+        /* نوار هوشمند و شیک نصب برنامه */
+        #install-bar {
+            display: none;
+            background: linear-gradient(135deg, #1e40af, #2563eb);
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #3b82f6;
+            animation: fadeIn 0.5s ease;
+            box-sizing: border-box;
+        }
+
+        #install-bar p {
+            font-size: 13px;
+            margin: 0 0 10px 0;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        #btn-install {
+            background-color: #fff;
+            color: #1e40af;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        #btn-install:hover {
+            background-color: #f1f5f9;
+            transform: scale(1.03);
         }
 
         .top-header {
@@ -211,11 +249,21 @@
                 word-break: break-all;
             }
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <div id="install-bar">
+        <p id="installText">📱 ابزار مانی را نصب کنید تا بدون نیاز به فیلترشکن و کاملاً آفلاین اجرا شود!</p>
+        <button id="btn-install">👇 نصب مستقیم ابزار</button>
+    </div>
+
     <div class="top-header">
         <button class="lang-switch" onclick="toggleLanguage()">
             <span>🌐</span><span id="langBtnText">English</span>
@@ -228,7 +276,7 @@
         <textarea id="ipInput" placeholder="آی‌پی‌های خود را کپی کرده و اینجا بفرستید (هر آی‌پی در یک خط)..."></textarea>
         <div class="btn-group">
             <button id="startBtn" class="action-btn" onclick="startScan()">شروع اسکن دقیق</button>
-            <button id="copyAllBtn" class="action-btn btn-copy-all" onclick="copyGoodIPs()" disabled>کپی آی‌پی‌های زیر 500ms</button>
+            <button id="copyAllBtn" class="action-btn btn-copy-all" onclick="copyGoodIPs()" disabled>کپی آی‌پی‌های زیر 200ms</button>
         </div>
     </div>
 
@@ -262,12 +310,41 @@
 <script>
     let globalResults = [];
     let currentLang = 'fa';
+    let deferredPrompt;
+
+    // ثبت سرویس ورکر برای پشتیبانی نصب PWA
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker Registered!'))
+                .catch(err => console.log('Service Worker Failed!', err));
+        });
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('install-bar').style.display = 'block';
+    });
+
+    document.getElementById('btn-install').addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            document.getElementById('install-bar').style.display = 'none';
+        }
+    });
+
+    window.addEventListener('appinstalled', () => {
+        document.getElementById('install-bar').style.display = 'none';
+    });
 
     const locales = {
         fa: {
             placeholder: "آی‌پی‌های خود را کپی کرده و اینجا بفرستید (هر آی‌پی در یک خط)...",
             startBtn: "شروع اسکن دقیق",
-            copyAllBtn: "کپی آی‌پی‌های زیر 500ms",
+            copyAllBtn: "کپی آی‌پی‌های زیر 200ms",
             waitStatus: "در انتظار شروع...",
             emptyList: "لیست خالی است. آی‌پی‌ها را وارد کنید.",
             rank: "رتبه",
@@ -279,15 +356,17 @@
             copy: "کپی",
             copied: "کپی شد! ✓",
             copiedAll: "لیست آی‌پی‌های خوب کپی شد! ✓",
-            noGoodIp: "هیچ آی‌پی با پینگ زیر ۵۰۰ میلی‌ثانیه پیدا نشد.",
+            noGoodIp: "هیچ آی‌پی با پینگ زیر ۲۰۰ میلی‌ثانیه پیدا نشد.",
             alertEmpty: "لطفاً ابتدا لیست آی‌پی‌ها را وارد کنید.",
             failedPing: "ناموفق",
-            langBtn: "English"
+            langBtn: "English",
+            installBanner: "📱 ابزار مانی را نصب کنید تا بدون نیاز به فیلترشکن و کاملاً آفلاین اجرا شود!",
+            installBtn: "👇 نصب مستقیم ابزار"
         },
         en: {
             placeholder: "Paste your IPs here (One IP per line)...",
             startBtn: "Start Precision Scan",
-            copyAllBtn: "Copy IPs under 500ms",
+            copyAllBtn: "Copy IPs under 200ms",
             waitStatus: "Waiting to start...",
             emptyList: "List is empty. Please enter IPs.",
             rank: "Rank",
@@ -299,10 +378,12 @@
             copy: "Copy",
             copied: "Copied! ✓",
             copiedAll: "Good IPs list copied! ✓",
-            noGoodIp: "No IPs found with ping under 500ms.",
+            noGoodIp: "No IPs found with ping under 200ms.",
             alertEmpty: "Please enter IPs first.",
             failedPing: "Failed",
-            langBtn: "فارسی"
+            langBtn: "فارسی",
+            installBanner: "📱 Install Mani App to use it offline without proxy!",
+            installBtn: "👇 Install Directly"
         }
     };
 
@@ -314,6 +395,8 @@
         htmlTag.dir = currentLang === 'fa' ? 'rtl' : 'ltr';
 
         document.getElementById('langBtnText').innerText = locales[currentLang].langBtn;
+        document.getElementById('installText').innerText = locales[currentLang].installBanner;
+        document.getElementById('btn-install').innerText = locales[currentLang].installBtn;
         document.getElementById('ipInput').placeholder = locales[currentLang].placeholder;
         document.getElementById('startBtn').innerText = locales[currentLang].startBtn;
         
@@ -395,9 +478,10 @@
         setTimeout(() => { btnElement.innerText = locales[currentLang].copy; }, 1500);
     }
 
+    // فیلتر کپی دسته جمعی روی سقف ۲۰۰ میلی‌ثانیه تنظیم شد
     function copyGoodIPs() {
         const goodIPs = globalResults
-            .filter(item => typeof item.ping === 'number' && item.ping <= 500)
+            .filter(item => typeof item.ping === 'number' && item.ping <= 200)
             .map(item => item.ip)
             .join('\n');
 
@@ -503,5 +587,6 @@
         });
     }
 </script>
+
 </body>
 </html>
