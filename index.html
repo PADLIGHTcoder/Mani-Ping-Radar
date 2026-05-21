@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mani</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #151f32;
+            --input-bg: #0f172a;
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --accent: #2563eb;
+            --accent-hover: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #1e293b;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 15px 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 750px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            box-sizing: border-box;
+        }
+
+        /* هدر جدید برای دکمه زبان جهت جلوگیری از بیرون زدن */
+        .top-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+        
+        html[dir="rtl"] .top-header { justify-content: left; }
+        html[dir="ltr"] .top-header { justify-content: right; }
+
+        .lang-switch {
+            background: #1e293b;
+            border: 1px solid var(--border);
+            color: #cbd5e1;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .lang-switch:hover {
+            background: #334155;
+            color: #fff;
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 800;
+            margin-top: 5px;
+            margin-bottom: 24px;
+            text-align: center;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            padding: 16px;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            min-height: 120px;
+            outline: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover { background-color: var(--accent-hover); }
+        button:disabled { background-color: #334155; color: #64748b; cursor: not-allowed; }
+
+        .btn-copy-all {
+            background-color: #1e293b;
+            border: 1px solid var(--border);
+            color: #cbd5e1;
+        }
+        .btn-copy-all:hover { background-color: #334155; }
+
+        .progress-container {
+            width: 100%;
+            background-color: var(--input-bg);
+            border-radius: 8px;
+            height: 6px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to left, #3b82f6, #8b5cf6);
+            transition: width 0.3s ease;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        /* حل مشکل عرض جدول و فشرده‌سازی در موبایل */
+        .table-wrapper {
+            background: var(--input-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            width: 100%;
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
+        
+        html[dir="rtl"] th { text-align: right; }
+        html[dir="ltr"] th { text-align: left; }
+        
+        th { background-color: rgba(15, 23, 42, 0.6); color: #94a3b8; padding: 10px 8px; font-size: 12px; border-bottom: 1px solid var(--border); }
+        td { padding: 12px 8px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+
+        .ping-badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 20px; font-weight: 700; font-size: 11px; white-space: nowrap; }
+        .excellent { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .good { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .bad { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+
+        .copy-btn { 
+            background: #1e293b; 
+            color: #cbd5e1; 
+            border: 1px solid #334155; 
+            padding: 5px 10px; 
+            border-radius: 6px; 
+            font-size: 11px; 
+            cursor: pointer; 
+            white-space: nowrap;
+            width: 100%;
+            max-width: 65px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .copy-btn:hover { background: #334155; color: #fff; }
+
+        /* ریسپانیو کردن دکمه‌های اصلی در موبایل */
+        @media (max-width: 480px) {
+            .btn-group {
+                flex-direction: column;
+                gap: 8px;
+            }
+            button {
+                width: 100%;
+            }
+            /* کاهش فونت آی‌پی در موبایل برای جا شدن کامل در ستون */
+            .ip-cell {
+                font-size: 12px !important;
+                word-break: break-all;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- بخش جدید دکمه زبان -->
+    <div class="top-header">
+        <button class="lang-switch" onclick="toggleLanguage()">
+            <span>🌐</span><span id="langBtnText">English</span>
+        </button>
+    </div>
+
+    <h1>Mani</h1>
+
+    <div class="controls">
+        <textarea id="ipInput" placeholder="آی‌پی‌های خود را کپی کرده و اینجا بفرستید (هر آی‌پی در یک خط)..."></textarea>
+        <div class="btn-group">
+            <button id="startBtn" onclick="startScan()">شروع اسکن دقیق</button>
+            <button id="copyAllBtn" class="btn-copy-all" onclick="copyGoodIPs()" disabled>کپی آی‌پی‌های زیر 500ms</button>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span id="progressText">در انتظار شروع...</span>
+    </div>
+
+    <div class="progress-container" id="pContainer">
+        <div class="progress-bar" id="pBar"></div>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 10%;" id="thRank">رتبه</th>
+                    <th style="width: 46%;" id="thIp">آدرس IP</th>
+                    <th style="width: 24%;" id="thPing">پینگ (تأخیر)</th>
+                    <th style="width: 20%; text-align: center;" id="thAction">عملیات</th>
+                </tr>
+            </thead>
+            <tbody id="resultTable">
+                <tr>
+                    <td colspan="4" id="emptyRow" style="text-align: center; color: var(--text-muted); padding: 30px;">لیست خالی است. آی‌پی‌ها را وارد کنید.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let globalResults = [];
+    let currentLang = 'fa';
+
+    const locales = {
+        fa: {
+            placeholder: "آی‌پی‌های خود را کپی کرده و اینجا بفرستید (هر آی‌پی در یک خط)...",
+            startBtn: "شروع اسکن دقیق",
+            copyAllBtn: "کپی آی‌پی‌های زیر 500ms",
+            waitStatus: "در انتظار شروع...",
+            emptyList: "لیست خالی است. آی‌پی‌ها را وارد کنید.",
+            rank: "رتبه",
+            ip: "آدرس IP",
+            ping: "پینگ (تأخیر)",
+            action: "عملیات",
+            scanning: "در حال پردازش...",
+            scanFinished: "اسکن پایان یافت.",
+            copy: "کپی",
+            copied: "کپی شد! ✓",
+            copiedAll: "لیست آی‌پی‌های خوب کپی شد! ✓",
+            noGoodIp: "هیچ آی‌پی با پینگ زیر ۵۰۰ میلی‌ثانیه پیدا نشد.",
+            alertEmpty: "لطفاً ابتدا لیست آی‌پی‌ها را وارد کنید.",
+            failedPing: "ناموفق",
+            langBtn: "English"
+        },
+        en: {
+            placeholder: "Paste your IPs here (One IP per line)...",
+            startBtn: "Start Precision Scan",
+            copyAllBtn: "Copy IPs under 500ms",
+            waitStatus: "Waiting to start...",
+            emptyList: "List is empty. Please enter IPs.",
+            rank: "Rank",
+            ip: "IP Address",
+            ping: "Ping (Latency)",
+            action: "Action",
+            scanning: "Processing...",
+            scanFinished: "Scan completed.",
+            copy: "Copy",
+            copied: "Copied! ✓",
+            copiedAll: "Good IPs list copied! ✓",
+            noGoodIp: "No IPs found with ping under 500ms.",
+            alertEmpty: "Please enter IPs first.",
+            failedPing: "Failed",
+            langBtn: "فارسی"
+        }
+    };
+
+    function toggleLanguage() {
+        currentLang = currentLang === 'fa' ? 'en' : 'fa';
+        
+        const htmlTag = document.documentElement;
+        htmlTag.lang = currentLang;
+        htmlTag.dir = currentLang === 'fa' ? 'rtl' : 'ltr';
+
+        document.getElementById('langBtnText').innerText = locales[currentLang].langBtn;
+        document.getElementById('ipInput').placeholder = locales[currentLang].placeholder;
+        document.getElementById('startBtn').innerText = locales[currentLang].startBtn;
+        
+        const copyAllBtn = document.getElementById('copyAllBtn');
+        copyAllBtn.innerText = locales[currentLang].copyAllBtn;
+
+        document.getElementById('thRank').innerText = locales[currentLang].rank;
+        document.getElementById('thIp').innerText = locales[currentLang].ip;
+        document.getElementById('thPing').innerText = locales[currentLang].ping;
+        document.getElementById('thAction').innerText = locales[currentLang].action;
+
+        const progressText = document.getElementById('progressText');
+        if (progressText.innerText.includes('انتظار') || progressText.innerText.includes('Waiting')) {
+            progressText.innerText = locales[currentLang].waitStatus;
+        } else if (progressText.innerText.includes('پایان') || progressText.innerText.includes('completed')) {
+            progressText.innerText = locales[currentLang].scanFinished;
+        }
+
+        if(globalResults.length > 0) {
+            renderResults(globalResults);
+        } else {
+            document.getElementById('emptyRow').innerText = locales[currentLang].emptyList;
+        }
+    }
+
+    function fallbackCopyText(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed"; 
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.width = "2em";
+        textArea.style.height = "2em";
+        textArea.style.padding = "0";
+        textArea.style.border = "none";
+        textArea.style.outline = "none";
+        textArea.style.boxShadow = "none";
+        textArea.style.background = "transparent";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+        } catch (err) {
+            console.error('Error copying text:', err);
+        }
+        document.body.removeChild(textArea);
+    }
+
+    async function pingIP(ip) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500); 
+        
+        const startTime = performance.now();
+        try {
+            await fetch(`https://${ip}/cdn-cgi/trace`, { 
+                mode: 'no-cors', 
+                signal: controller.signal,
+                cache: 'no-cache',
+                credentials: 'omit'
+            });
+            const duration = Math.round(performance.now() - startTime);
+            clearTimeout(timeoutId);
+            return duration;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            try {
+                const subController = new AbortController();
+                setTimeout(() => subController.abort(), 1500);
+                const subStart = performance.now();
+                await fetch(`http://${ip}`, { mode: 'no-cors', signal: subController.signal, cache: 'no-cache' });
+                return Math.round(performance.now() - subStart);
+            } catch(e) {
+                return Infinity;
+            }
+        }
+    }
+
+    function copyToClipboard(text, btnElement) {
+        fallbackCopyText(text);
+        btnElement.innerText = locales[currentLang].copied;
+        setTimeout(() => { btnElement.innerText = locales[currentLang].copy; }, 1500);
+    }
+
+    function copyGoodIPs() {
+        const goodIPs = globalResults
+            .filter(item => typeof item.ping === 'number' && item.ping <= 500)
+            .map(item => item.ip)
+            .join('\n');
+
+        if (!goodIPs) {
+            alert(locales[currentLang].noGoodIp);
+            return;
+        }
+
+        fallbackCopyText(goodIPs);
+        const copyAllBtn = document.getElementById('copyAllBtn');
+        copyAllBtn.innerText = locales[currentLang].copiedAll;
+        setTimeout(() => { copyAllBtn.innerText = locales[currentLang].copyAllBtn; }, 2000);
+    }
+
+    async function startScan() {
+        const input = document.getElementById('ipInput').value;
+        const startBtn = document.getElementById('startBtn');
+        const copyAllBtn = document.getElementById('copyAllBtn');
+        const progressText = document.getElementById('progressText');
+        const pContainer = document.getElementById('pContainer');
+        const pBar = document.getElementById('pBar');
+        
+        const ips = input.split('\n').map(ip => ip.trim()).filter(ip => ip.length > 0);
+        
+        if(ips.length === 0) {
+            alert(locales[currentLang].alertEmpty);
+            return;
+        }
+
+        startBtn.disabled = true;
+        copyAllBtn.disabled = true;
+        pContainer.style.display = 'block';
+        pBar.style.width = '0%';
+        
+        globalResults = [];
+        let completedCount = 0;
+        const batchSize = 6;
+
+        for (let i = 0; i < ips.length; i += batchSize) {
+            const batch = ips.slice(i, i + batchSize);
+            
+            const batchPromises = batch.map(async (ip) => {
+                const ping = await pingIP(ip);
+                if (ping !== Infinity && ping > 10) {
+                    globalResults.push({ ip, ping });
+                } else {
+                    globalResults.push({ ip, ping: 'FAILED_MARKER' });
+                }
+                completedCount++;
+                
+                const percent = Math.round((completedCount / ips.length) * 100);
+                pBar.style.width = `${percent}%`;
+            });
+
+            await Promise.all(batchPromises);
+            renderResults(globalResults);
+            
+            if(currentLang === 'fa') {
+                progressText.innerText = `در حال پردازش... (${completedCount} از ${ips.length} آی‌پی)`;
+            } else {
+                progressText.innerText = `Processing... (${completedCount} of ${ips.length} IPs)`;
+            }
+        }
+
+        progressText.innerText = locales[currentLang].scanFinished;
+        startBtn.disabled = false;
+        copyAllBtn.disabled = false;
+    }
+
+    function renderResults(results) {
+        const tableBody = document.getElementById('resultTable');
+        let sortedResults = [...results];
+
+        sortedResults.sort((a, b) => {
+            if (a.ping === 'FAILED_MARKER') return 1;
+            if (b.ping === 'FAILED_MARKER') return -1;
+            return a.ping - b.ping;
+        });
+
+        tableBody.innerHTML = '';
+
+        sortedResults.forEach((item, index) => {
+            let badgeClass = 'bad';
+            let pingDisplay = locales[currentLang].failedPing;
+
+            if (item.ping !== 'FAILED_MARKER') {
+                pingDisplay = item.ping + ' ms';
+                if (item.ping < 150) badgeClass = 'excellent';
+                else if (item.ping < 500) badgeClass = 'good';
+            }
+
+            const row = `
+                <tr>
+                    <td style="font-weight: bold; color: var(--text-muted);">${index + 1}</td>
+                    <td class="ip-cell" style="font-family: monospace; font-size: 13px;">${item.ip}</td>
+                    <td><span class="ping-badge ${badgeClass}">${pingDisplay}</span></td>
+                    <td style="text-align: center;">
+                        <button class="copy-btn" onclick="copyToClipboard('${item.ip}', this)">${locales[currentLang].copy}</button>
+                    </td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+    }
+</script>
+
+</body>
+</html>
