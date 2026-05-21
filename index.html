@@ -442,13 +442,12 @@
         document.body.removeChild(textArea);
     }
 
-    // موتور اسکن بهبودیافته با قابلیت آنتی‌کَش (Anti-Cache) 100٪ تضمینی
+    // متد اصلاح شده با حساسیت بالا برای دور زدن لایه‌های کَش سیستم‌عامل
     function pingIP(ip) {
         return new Promise((resolve) => {
             const start = performance.now();
             const img = new Image();
             
-            // تعیین تایم‌اوت ۲.۵ ثانیه‌ای برای آی‌پی‌های مرده
             const timer = setTimeout(() => {
                 img.src = ""; 
                 resolve(Infinity);
@@ -469,9 +468,9 @@
                 }
             };
 
-            // استفاده از مهر زمانی میکروثانیه‌ای منحصر‌به‌فرد برای مجبور کردن مرورگر به اسکن واقعی شبکه
-            const antiCacheParam = Date.now() + Math.random().toString(36).substring(2);
-            img.src = `http://${ip}/cdn-cgi/trace?cachebreaker=${antiCacheParam}`;
+            // استفاده از پروتکل استاندارد HTTPS و ایجاد شناسه منحصر‌به‌فرد سخت‌گیرانه برای پاکسازی حافظه پنهان
+            const uniqueStamp = performance.now() + '_' + Math.random().toString(36).substring(2);
+            img.src = `https://${ip}/cdn-cgi/trace?cb=${uniqueStamp}`;
         });
     }
 
@@ -520,7 +519,7 @@
         
         globalResults = [];
         let completedCount = 0;
-        const batchSize = 6;
+        const batchSize = 4; // کاهش دسته برای افزایش تمرکز مرورگر روی شبکه واقعی
 
         for (let i = 0; i < ips.length; i += batchSize) {
             const batch = ips.slice(i, i + batchSize);
