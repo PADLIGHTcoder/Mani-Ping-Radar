@@ -3,306 +3,336 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mani IP Scanner</title>
-    <!-- اتصال به فایل مانیفست برای قابلیت نصب PWA -->
+    <title>اسکنر دقیق آی‌پی مانی</title>
+    <!-- وب‌اپلیکیشن PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563eb">
     
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --card-bg: #151f32;
-            --input-bg: #0f172a;
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border-color: #334155;
             --text-main: #f8fafc;
-            --text-muted: #64748b;
-            --accent: #2563eb;
-            --accent-hover: #3b82f6;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --border: #1e293b;
+            --text-muted: #94a3b8;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            
+            /* رنگ‌های وضعیت پینگ */
+            --excellent: #22c55e;
+            --good: #eab308;
+            --bad: #ef4444;
+        }
+
+        [lang="en"] {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-color);
+            font-family: Tahoma, Geneva, sans-serif;
+            background-color: var(--bg-main);
             color: var(--text-main);
             margin: 0;
-            padding: 15px 10px;
-            display: flex;
-            justify-content: center;
+            padding: 20px;
+            direction: rtl;
         }
 
         .container {
-            width: 100%;
-            max-width: 750px;
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-            border: 1px solid var(--border);
-            box-sizing: border-box;
+            max-width: 700px;
+            margin: 0 auto;
         }
 
-        /* نوار هوشمند و شیک نصب برنامه */
-        #install-bar {
-            display: none;
-            background: linear-gradient(135deg, #1e40af, #2563eb);
-            padding: 14px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            text-align: center;
-            border: 1px solid #3b82f6;
-            animation: fadeIn 0.5s ease;
-            box-sizing: border-box;
-        }
-
-        #install-bar p {
-            font-size: 13px;
-            margin: 0 0 10px 0;
-            font-weight: bold;
-            color: #fff;
-        }
-
-        #btn-install {
-            background-color: #fff;
-            color: #1e40af;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-
-        #btn-install:hover {
-            background-color: #f1f5f9;
-            transform: scale(1.03);
-        }
-
-        .top-header {
+        header {
             display: flex;
-            justify-content: flex-end;
-            margin-bottom: 10px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
         }
-        
-        html[dir="rtl"] .top-header { justify-content: left; }
-        html[dir="ltr"] .top-header { justify-content: right; }
 
-        .lang-switch {
-            background: #1e293b;
-            border: 1px solid var(--border);
-            color: #cbd5e1;
+        h1 {
+            font-size: 20px;
+            margin: 0;
+            background: linear-gradient(to right, #60a5fa, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .lang-btn {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
             padding: 6px 12px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
             transition: all 0.2s;
         }
-        .lang-switch:hover {
-            background: #334155;
-            color: #fff;
+
+        .lang-btn:hover {
+            background-color: var(--border-color);
         }
 
-        h1 {
-            font-size: 26px;
-            font-weight: 800;
-            margin-top: 5px;
-            margin-bottom: 24px;
-            text-align: center;
-            background: linear-gradient(to right, #60a5fa, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 1px;
+        /* نوار اعلان نصب اندروید/ویندوز */
+        #install-bar {
+            display: none;
+            background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #3b82f6;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        .controls {
+        .install-container {
             display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin-bottom: 24px;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .install-text {
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+
+        .btn-install-action {
+            background-color: #ffffff;
+            color: #1e3a8a;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-install-action:hover {
+            background-color: #f1f5f9;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
 
         textarea {
             width: 100%;
-            box-sizing: border-box;
-            background: var(--input-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
+            height: 140px;
+            background-color: var(--bg-main);
             color: var(--text-main);
-            padding: 16px;
-            font-family: monospace;
-            font-size: 14px;
-            line-height: 1.6;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            box-sizing: border-box;
             resize: vertical;
-            min-height: 120px;
-            outline: none;
+            font-family: monospace;
+            font-size: 13.5px;
+            line-height: 1.5;
+            margin-bottom: 15px;
         }
 
-        .btn-group {
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .actions-row {
             display: flex;
             gap: 10px;
         }
 
-        button.action-btn {
+        .btn {
             flex: 1;
-            background-color: var(--accent);
-            color: white;
+            padding: 12px;
             border: none;
-            border-radius: 12px;
-            padding: 14px 10px;
-            font-size: 14px;
+            border-radius: 10px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s;
+            font-size: 14px;
+            transition: opacity 0.2s;
         }
 
-        button.action-btn:hover { background-color: var(--accent-hover); }
-        button.action-btn:disabled { background-color: #334155; color: #64748b; cursor: not-allowed; }
-
-        .btn-copy-all {
-            background-color: #1e293b;
-            border: 1px solid var(--border);
-            color: #cbd5e1;
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
-        .btn-copy-all:hover { background-color: #334155; }
 
-        .progress-container {
-            width: 100%;
-            background-color: var(--input-bg);
-            border-radius: 8px;
-            height: 6px;
-            margin-bottom: 20px;
-            overflow: hidden;
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-success {
+            background-color: #059669;
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background-color: #047857;
+        }
+
+        /* نوار وضعیت اسکن */
+        #pContainer {
             display: none;
+            margin-top: 15px;
+        }
+
+        .progress-text {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .progress-bg {
+            background-color: var(--bg-main);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
         }
 
         .progress-bar {
-            height: 100%;
+            background-color: var(--primary);
             width: 0%;
-            background: linear-gradient(to left, #3b82f6, #8b5cf6);
-            transition: width 0.3s ease;
+            height: 100%;
+            transition: width 0.2s ease;
         }
 
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
+        /* استایل جدول نتایج رتبه‌بندی */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            background-color: var(--bg-main);
             color: var(--text-muted);
+            text-align: right;
+            padding: 12px;
             font-size: 13px;
-            margin-bottom: 12px;
+            font-weight: normal;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .table-wrapper {
-            background: var(--input-bg);
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            width: 100%;
+        [lang="en"] th {
+            text-align: left;
         }
 
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
+        td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
         }
-        
-        html[dir="rtl"] th { text-align: right; }
-        html[dir="ltr"] th { text-align: left; }
-        
-        th { background-color: rgba(15, 23, 42, 0.6); color: #94a3b8; padding: 10px 8px; font-size: 12px; border-bottom: 1px solid var(--border); }
-        td { padding: 12px 8px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
-        tr:last-child td { border-bottom: none; }
 
-        .ping-badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 20px; font-weight: 700; font-size: 11px; white-space: nowrap; }
-        .excellent { background: rgba(16, 185, 129, 0.15); color: var(--success); }
-        .good { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
-        .bad { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+        .ip-cell {
+            direction: ltr;
+            text-align: right;
+        }
 
-        .copy-btn { 
-            background: #1e293b; 
-            color: #cbd5e1; 
-            border: 1px solid #334155; 
-            padding: 5px 10px; 
-            border-radius: 6px; 
-            font-size: 11px; 
-            cursor: pointer; 
-            white-space: nowrap;
-            width: 100%;
-            max-width: 65px;
+        [lang="en"] .ip-cell {
+            text-align: left;
+        }
+
+        .ping-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            direction: ltr;
+        }
+
+        .excellent { background-color: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .good { background-color: rgba(234, 179, 8, 0.2); color: #facc15; }
+        .bad { background-color: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+        .copy-btn {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .copy-btn:hover {
+            background-color: var(--border-color);
+        }
+
+        .empty-state {
             text-align: center;
-            box-sizing: border-box;
-        }
-        .copy-btn:hover { background: #334155; color: #fff; }
-
-        @media (max-width: 480px) {
-            .btn-group {
-                flex-direction: column;
-                gap: 8px;
-            }
-            button.action-btn {
-                width: 100%;
-            }
-            .ip-cell {
-                font-size: 12px !important;
-                word-break: break-all;
-            }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            color: var(--text-muted);
+            padding: 30px 0;
+            font-size: 13.5px;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- نوار هوشمند نصب برنامه -->
-    <div id="install-bar">
-        <p id="installText">📱 ابزار مانی را نصب کنید تا بدون نیاز به فیلترشکن و کاملاً آفلاین اجرا شود!</p>
-        <button id="btn-install">👇 نصب مستقیم ابزار</button>
-    </div>
-
-    <div class="top-header">
-        <button class="lang-switch" onclick="toggleLanguage()">
-            <span>🌐</span><span id="langBtnText">English</span>
+    <header>
+        <h1>ابزار تست پینگ مانی</h1>
+        <button class="lang-btn" id="langBtn" onclick="toggleLanguage()">
+            <span id="langBtnText">English</span>
         </button>
-    </div>
+    </header>
 
-    <h1>Mani IP Scanner</h1>
-
-    <div class="controls">
-        <textarea id="ipInput" placeholder="آی‌پی‌های خود را کپی کرده و اینجا بفرستید (هر آی‌پی در یک خط)..."></textarea>
-        <div class="btn-group">
-            <button id="startBtn" class="action-btn" onclick="startScan()">شروع اسکن دقیق</button>
-            <button id="copyAllBtn" class="action-btn btn-copy-all" onclick="copyGoodIPs()" disabled>کپی آی‌پی‌های زیر 500ms</button>
+    <!-- نوار هوشمند PWA برای نصب برنامه‌ها -->
+    <div id="install-bar">
+        <div class="install-container">
+            <div class="install-text" id="installText">
+                📱 ابزار مانی را نصب کنید تا بدون نیاز به فیلترشکن و کاملاً آفلاین اجرا شود!
+            </div>
+            <button class="btn-install-action" id="btn-install">نصب برنامه</button>
         </div>
     </div>
 
-    <div class="status-bar">
-        <span id="progressText">در انتظار شروع...</span>
+    <!-- بخش ورودی اطلاعات ابزار -->
+    <div class="card">
+        <textarea id="ipInput" placeholder="آی‌پی‌های خود را کپی کرده و اینجا بفرستید (هر آی‌پی در یک خط)..."></textarea>
+        
+        <div class="actions-row">
+            <button class="btn btn-primary" id="startBtn" onclick="startScan()">شروع اسکن دقیق</button>
+            <button class="btn btn-success" id="copyAllBtn" onclick="copyGoodIPs()">کپی آی‌پی‌های زیر 500ms</button>
+        </div>
+
+        <div id="pContainer">
+            <span class="progress-text" id="progressText">در انتظار شروع...</span>
+            <div class="progress-bg">
+                <div class="progress-bar" id="pBar"></div>
+            </div>
+        </div>
     </div>
 
-    <div class="progress-container" id="pContainer">
-        <div class="progress-bar" id="pBar"></div>
-    </div>
-
-    <div class="table-wrapper">
+    <!-- جدول رتبه‌بندی تمیز نتایج -->
+    <div class="card" style="padding: 10px 20px;">
         <table>
             <thead>
                 <tr>
                     <th style="width: 10%;" id="thRank">رتبه</th>
-                    <th style="width: 46%;" id="thIp">آدرس IP</th>
-                    <th style="width: 24%;" id="thPing">پینگ (تأخیر)</th>
-                    <th style="width: 20%; text-align: center;" id="thAction">عملیات</th>
+                    <th style="width: 50%;" id="thIp">آدرس IP</th>
+                    <th style="width: 25%;" id="thPing">پینگ (تأخیر)</th>
+                    <th style="width: 15%; text-align: center;" id="thAction">عملیات</th>
                 </tr>
             </thead>
             <tbody id="resultTable">
                 <tr>
-                    <td colspan="4" id="emptyRow" style="text-align: center; color: var(--text-muted); padding: 30px;">لیست خالی است. آی‌پی‌ها را وارد کنید.</td>
+                    <td colspan="4" class="empty-state" id="emptyRow">لیست خالی است. آی‌پی‌ها را وارد کنید.</td>
                 </tr>
             </tbody>
         </table>
@@ -312,9 +342,9 @@
 <script>
     let globalResults = [];
     let currentLang = 'fa';
-    let deferredPrompt;
+    let deferredPrompt = null;
 
-    // سرویس ورکر PWA
+    // ۱. ثبت سرویس ورکر PWA برای اجرای آفلاین
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js')
@@ -323,12 +353,14 @@
         });
     }
 
+    // ۲. مدیریت نوار هوشمند نصب ابزار مانی
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
         document.getElementById('install-bar').style.display = 'block';
     });
 
+    // مدیریت امن رویداد دکمه نصب بدون آسیب دیدن از تغییر زبان
     document.getElementById('btn-install').addEventListener('click', async () => {
         if (deferredPrompt) {
             deferredPrompt.prompt();
@@ -342,6 +374,7 @@
         document.getElementById('install-bar').style.display = 'none';
     });
 
+    // ۳. واژه‌نامه دوزبانه ابزار مانی
     const locales = {
         fa: {
             placeholder: "آی‌پی‌های خود را کپی کرده و اینجا بفرستید (هر آی‌پی در یک خط)...",
@@ -363,7 +396,7 @@
             failedPing: "ناموفق",
             langBtn: "English",
             installBanner: "📱 ابزار مانی را نصب کنید تا بدون نیاز به فیلترشکن و کاملاً آفلاین اجرا شود!",
-            installBtn: "👇 نصب مستقیم ابزار"
+            installBtn: "نصب برنامه"
         },
         en: {
             placeholder: "Paste your IPs here (One IP per line)...",
@@ -385,10 +418,11 @@
             failedPing: "Failed",
             langBtn: "فارسی",
             installBanner: "📱 Install Mani App to use it offline without proxy!",
-            installBtn: "👇 Install Directly"
+            installBtn: "Install App"
         }
     };
 
+    // ۴. جابجایی هوشمند بین زبان‌ها
     function toggleLanguage() {
         currentLang = currentLang === 'fa' ? 'en' : 'fa';
         const htmlTag = document.documentElement;
@@ -430,15 +464,14 @@
         document.body.removeChild(textArea);
     }
 
-    // 💡 بازنویسی هوشمند سیستم پینگ با استفاده از ترفند لود تصویر (رفع همیشگی مشکل Mixed Content در حالت نصب‌شده)
+    // ۵. جادوی پینگ تصویری برای دور زدن محدودیت‌های امنیتی مرورگر
     function pingIP(ip) {
         return new Promise((resolve) => {
             const start = performance.now();
             const img = new Image();
             
-            // تعیین تایم‌اوت ۲.۵ ثانیه‌ای
             const timer = setTimeout(() => {
-                img.src = ""; // متوقف کردن لود
+                img.src = ""; 
                 resolve(Infinity);
             }, 2500);
 
@@ -450,7 +483,6 @@
             img.onerror = () => {
                 clearTimeout(timer);
                 const duration = Math.round(performance.now() - start);
-                // در پینگ تصویری، حتی بلاک شدن یا ارور ۴۰۴ هم یعنی سرور زنده است و دیتا را برگردانده!
                 if (duration < 2500) {
                     resolve(duration);
                 } else {
@@ -458,7 +490,6 @@
                 }
             };
 
-            // ارسال درخواست به نقطه فیدبک کلودفلر با دور زدن محدودیت‌های HTTPS امن مرورگر
             img.src = `http://${ip}/cdn-cgi/trace?v=${start}`;
         });
     }
@@ -486,6 +517,7 @@
         setTimeout(() => { copyAllBtn.innerText = locales[currentLang].copyAllBtn; }, 2000);
     }
 
+    // ۶. پردازش همزمان و دسته‌ای آی‌پی‌ها
     async function startScan() {
         const input = document.getElementById('ipInput').value;
         const startBtn = document.getElementById('startBtn');
@@ -540,6 +572,7 @@
         copyAllBtn.disabled = false;
     }
 
+    // ۷. ساخت و چیدمان پویای جدول نتایج
     function renderResults(results) {
         const tableBody = document.getElementById('resultTable');
         let sortedResults = [...results];
