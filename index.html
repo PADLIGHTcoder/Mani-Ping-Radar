@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mani</title>
+    <title>Mani IP Scanner</title>
+    <!-- اتصال به فایل مانیفست برای قابلیت نصب PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    
     <style>
         :root {
             --bg-color: #0b0f19;
@@ -40,7 +44,43 @@
             box-sizing: border-box;
         }
 
-        /* هدر جدید برای دکمه زبان جهت جلوگیری از بیرون زدن */
+        /* نوار هوشمند و شیک نصب برنامه */
+        #install-bar {
+            display: none;
+            background: linear-gradient(135deg, #1e40af, #2563eb);
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #3b82f6;
+            animation: fadeIn 0.5s ease;
+            box-sizing: border-box;
+        }
+
+        #install-bar p {
+            font-size: 13px;
+            margin: 0 0 10px 0;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        #btn-install {
+            background-color: #fff;
+            color: #1e40af;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        #btn-install:hover {
+            background-color: #f1f5f9;
+            transform: scale(1.03);
+        }
+
         .top-header {
             display: flex;
             justify-content: flex-end;
@@ -108,7 +148,7 @@
             gap: 10px;
         }
 
-        button {
+        button.action-btn {
             flex: 1;
             background-color: var(--accent);
             color: white;
@@ -121,8 +161,8 @@
             transition: all 0.2s;
         }
 
-        button:hover { background-color: var(--accent-hover); }
-        button:disabled { background-color: #334155; color: #64748b; cursor: not-allowed; }
+        button.action-btn:hover { background-color: var(--accent-hover); }
+        button.action-btn:disabled { background-color: #334155; color: #64748b; cursor: not-allowed; }
 
         .btn-copy-all {
             background-color: #1e293b;
@@ -156,7 +196,6 @@
             margin-bottom: 12px;
         }
 
-        /* حل مشکل عرض جدول و فشرده‌سازی در موبایل */
         .table-wrapper {
             background: var(--input-bg);
             border-radius: 12px;
@@ -198,40 +237,48 @@
         }
         .copy-btn:hover { background: #334155; color: #fff; }
 
-        /* ریسپانیو کردن دکمه‌های اصلی در موبایل */
         @media (max-width: 480px) {
             .btn-group {
                 flex-direction: column;
                 gap: 8px;
             }
-            button {
+            button.action-btn {
                 width: 100%;
             }
-            /* کاهش فونت آی‌پی در موبایل برای جا شدن کامل در ستون */
             .ip-cell {
                 font-size: 12px !important;
                 word-break: break-all;
             }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- بخش جدید دکمه زبان -->
+    <!-- نوار هوشمند نصب برنامه (آفلاین شدن) -->
+    <div id="install-bar">
+        <p id="installText">📱 ابزار مانی را نصب کنید تا بدون نیاز به فیلترشکن و کاملاً آفلاین اجرا شود!</p>
+        <button id="btn-install">👇 نصب مستقیم ابزار</button>
+    </div>
+
     <div class="top-header">
         <button class="lang-switch" onclick="toggleLanguage()">
             <span>🌐</span><span id="langBtnText">English</span>
         </button>
     </div>
 
-    <h1>Mani</h1>
+    <h1>Mani IP Scanner</h1>
 
     <div class="controls">
         <textarea id="ipInput" placeholder="آی‌پی‌های خود را کپی کرده و اینجا بفرستید (هر آی‌پی در یک خط)..."></textarea>
         <div class="btn-group">
-            <button id="startBtn" onclick="startScan()">شروع اسکن دقیق</button>
-            <button id="copyAllBtn" class="btn-copy-all" onclick="copyGoodIPs()" disabled>کپی آی‌پی‌های زیر 500ms</button>
+            <button id="startBtn" class="action-btn" onclick="startScan()">شروع اسکن دقیق</button>
+            <button id="copyAllBtn" class="action-btn btn-copy-all" onclick="copyGoodIPs()" disabled>کپی آی‌پی‌های زیر 500ms</button>
         </div>
     </div>
 
@@ -265,6 +312,35 @@
 <script>
     let globalResults = [];
     let currentLang = 'fa';
+    let deferredPrompt;
+
+    // ثبت سرویس ورکر برای پشتیبانی نصب PWA
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker Registered!'))
+                .catch(err => console.log('Service Worker Failed!', err));
+        });
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('install-bar').style.display = 'block';
+    });
+
+    document.getElementById('btn-install').addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            document.getElementById('install-bar').style.display = 'none';
+        }
+    });
+
+    window.addEventListener('appinstalled', () => {
+        document.getElementById('install-bar').style.display = 'none';
+    });
 
     const locales = {
         fa: {
@@ -285,7 +361,9 @@
             noGoodIp: "هیچ آی‌پی با پینگ زیر ۵۰۰ میلی‌ثانیه پیدا نشد.",
             alertEmpty: "لطفاً ابتدا لیست آی‌پی‌ها را وارد کنید.",
             failedPing: "ناموفق",
-            langBtn: "English"
+            langBtn: "English",
+            installBanner: "📱 ابزار مانی را نصب کنید تا بدون نیاز به فیلترشکن و کاملاً آفلاین اجرا شود!",
+            installBtn: "👇 نصب مستقیم ابزار"
         },
         en: {
             placeholder: "Paste your IPs here (One IP per line)...",
@@ -305,7 +383,9 @@
             noGoodIp: "No IPs found with ping under 500ms.",
             alertEmpty: "Please enter IPs first.",
             failedPing: "Failed",
-            langBtn: "فارسی"
+            langBtn: "فارسی",
+            installBanner: "📱 Install Mani App to use it offline without proxy!",
+            installBtn: "👇 Install Directly"
         }
     };
 
@@ -317,6 +397,8 @@
         htmlTag.dir = currentLang === 'fa' ? 'rtl' : 'ltr';
 
         document.getElementById('langBtnText').innerText = locales[currentLang].langBtn;
+        document.getElementById('installText').innerText = locales[currentLang].installBanner;
+        document.getElementById('btn-install').innerText = locales[currentLang].installBtn;
         document.getElementById('ipInput').placeholder = locales[currentLang].placeholder;
         document.getElementById('startBtn').innerText = locales[currentLang].startBtn;
         
@@ -358,11 +440,7 @@
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        try {
-            document.execCommand('copy');
-        } catch (err) {
-            console.error('Error copying text:', err);
-        }
+        try { document.execCommand('copy'); } catch (err) { console.error(err); }
         document.body.removeChild(textArea);
     }
 
@@ -370,9 +448,11 @@
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 2500); 
         
+        // سیستم تشخیص هوشمند پروتکل برای برطرف کردن Mixed Content گیت‌هاب پیجز
+        const protocol = window.location.protocol === 'https:' ? 'https://' : 'http://';
         const startTime = performance.now();
         try {
-            await fetch(`https://${ip}/cdn-cgi/trace`, { 
+            await fetch(`${protocol}${ip}/cdn-cgi/trace`, { 
                 mode: 'no-cors', 
                 signal: controller.signal,
                 cache: 'no-cache',
@@ -383,15 +463,17 @@
             return duration;
         } catch (error) {
             clearTimeout(timeoutId);
-            try {
-                const subController = new AbortController();
-                setTimeout(() => subController.abort(), 1500);
-                const subStart = performance.now();
-                await fetch(`http://${ip}`, { mode: 'no-cors', signal: subController.signal, cache: 'no-cache' });
-                return Math.round(performance.now() - subStart);
-            } catch(e) {
-                return Infinity;
+            // لایه دوم تست در صورت لود لوکال یا کدهای معمولی HTTP
+            if(window.location.protocol !== 'https:') {
+                try {
+                    const subController = new AbortController();
+                    setTimeout(() => subController.abort(), 1500);
+                    const subStart = performance.now();
+                    await fetch(`http://${ip}`, { mode: 'no-cors', signal: subController.signal, cache: 'no-cache' });
+                    return Math.round(performance.now() - subStart);
+                } catch(e) { return Infinity; }
             }
+            return Infinity;
         }
     }
 
