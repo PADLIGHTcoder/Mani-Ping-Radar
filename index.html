@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mani IP Scanner</title>
-    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563eb">
     
     <style>
@@ -41,43 +40,6 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             border: 1px solid var(--border);
             box-sizing: border-box;
-        }
-
-        /* نوار هوشمند و شیک نصب برنامه */
-        #install-bar {
-            display: none;
-            background: linear-gradient(135deg, #1e40af, #2563eb);
-            padding: 14px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            text-align: center;
-            border: 1px solid #3b82f6;
-            animation: fadeIn 0.5s ease;
-            box-sizing: border-box;
-        }
-
-        #install-bar p {
-            font-size: 13px;
-            margin: 0 0 10px 0;
-            font-weight: bold;
-            color: #fff;
-        }
-
-        #btn-install {
-            background-color: #fff;
-            color: #1e40af;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-
-        #btn-install:hover {
-            background-color: #f1f5f9;
-            transform: scale(1.03);
         }
 
         .top-header {
@@ -249,21 +211,11 @@
                 word-break: break-all;
             }
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="install-bar">
-        <p id="installText">📱 ابزار مانی را نصب کنید تا بدون نیاز به فیلترشکن و کاملاً آفلاین اجرا شود!</p>
-        <button id="btn-install">👇 نصب مستقیم ابزار</button>
-    </div>
-
     <div class="top-header">
         <button class="lang-switch" onclick="toggleLanguage()">
             <span>🌐</span><span id="langBtnText">English</span>
@@ -310,35 +262,6 @@
 <script>
     let globalResults = [];
     let currentLang = 'fa';
-    let deferredPrompt;
-
-    // ثبت سرویس ورکر برای پشتیبانی نصب PWA
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker Registered!'))
-                .catch(err => console.log('Service Worker Failed!', err));
-        });
-    }
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        document.getElementById('install-bar').style.display = 'block';
-    });
-
-    document.getElementById('btn-install').addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            await deferredPrompt.userChoice;
-            deferredPrompt = null;
-            document.getElementById('install-bar').style.display = 'none';
-        }
-    });
-
-    window.addEventListener('appinstalled', () => {
-        document.getElementById('install-bar').style.display = 'none';
-    });
 
     const locales = {
         fa: {
@@ -359,9 +282,7 @@
             noGoodIp: "هیچ آی‌پی با پینگ زیر ۵۰۰ میلی‌ثانیه پیدا نشد.",
             alertEmpty: "لطفاً ابتدا لیست آی‌پی‌ها را وارد کنید.",
             failedPing: "ناموفق",
-            langBtn: "English",
-            installBanner: "📱 ابزار مانی را نصب کنید تا بدون نیاز به فیلترشکن و کاملاً آفلاین اجرا شود!",
-            installBtn: "👇 نصب مستقیم ابزار"
+            langBtn: "English"
         },
         en: {
             placeholder: "Paste your IPs here (One IP per line)...",
@@ -381,9 +302,7 @@
             noGoodIp: "No IPs found with ping under 500ms.",
             alertEmpty: "Please enter IPs first.",
             failedPing: "Failed",
-            langBtn: "فارسی",
-            installBanner: "📱 Install Mani App to use it offline without proxy!",
-            installBtn: "👇 Install Directly"
+            langBtn: "فارسی"
         }
     };
 
@@ -395,8 +314,6 @@
         htmlTag.dir = currentLang === 'fa' ? 'rtl' : 'ltr';
 
         document.getElementById('langBtnText').innerText = locales[currentLang].langBtn;
-        document.getElementById('installText').innerText = locales[currentLang].installBanner;
-        document.getElementById('btn-install').innerText = locales[currentLang].installBtn;
         document.getElementById('ipInput').placeholder = locales[currentLang].placeholder;
         document.getElementById('startBtn').innerText = locales[currentLang].startBtn;
         
@@ -442,7 +359,6 @@
         document.body.removeChild(textArea);
     }
 
-    // متد اصلاح شده با حساسیت بالا برای دور زدن لایه‌های کَش سیستم‌عامل
     function pingIP(ip) {
         return new Promise((resolve) => {
             const start = performance.now();
@@ -468,7 +384,6 @@
                 }
             };
 
-            // استفاده از پروتکل استاندارد HTTPS و ایجاد شناسه منحصر‌به‌فرد سخت‌گیرانه برای پاکسازی حافظه پنهان
             const uniqueStamp = performance.now() + '_' + Math.random().toString(36).substring(2);
             img.src = `https://${ip}/cdn-cgi/trace?cb=${uniqueStamp}`;
         });
@@ -519,7 +434,7 @@
         
         globalResults = [];
         let completedCount = 0;
-        const batchSize = 4; // کاهش دسته برای افزایش تمرکز مرورگر روی شبکه واقعی
+        const batchSize = 4;
 
         for (let i = 0; i < ips.length; i += batchSize) {
             const batch = ips.slice(i, i + batchSize);
@@ -588,6 +503,5 @@
         });
     }
 </script>
-
 </body>
 </html>
